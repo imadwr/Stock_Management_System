@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk, messagebox
+import sqlite3
 
 
 class POS:
@@ -37,9 +38,9 @@ class POS:
         pd_name_label.place(x=2, y=40)
         pd_name_txt = Entry(product_search_frame, textvariable=self.search_var, font=("Lato", 13, "normal"), bg="#EEE6CE")
         pd_name_txt.place(x=125, y=40, width=150, height=22)
-        search_btn = Button(product_search_frame, text="Chercher", font=("Lato", 13, "normal"), bg="#2EB086", fg="white")
+        search_btn = Button(product_search_frame, text="Chercher", command=self.search_product, font=("Lato", 13, "normal"), bg="#2EB086", fg="white")
         search_btn.place(x=280, y=40, width=110, height=22)
-        show_all_btn = Button(product_search_frame, text="Afficher tout", font=("Lato", 13, "normal"), bg="#313552",fg="white")
+        show_all_btn = Button(product_search_frame, text="Afficher tout", command=self.show_product, font=("Lato", 13, "normal"), bg="#313552",fg="white")
         show_all_btn.place(x=280, y=65, width=110, height=22)
 
         # product list
@@ -65,12 +66,13 @@ class POS:
 
         self.product_list_table["show"] = "headings"
 
-        self.product_list_table.column("id", width=90)
+        self.product_list_table.column("id", width=40)
         self.product_list_table.column("nom", width=100)
-        self.product_list_table.column("prix", width=100)
+        self.product_list_table.column("prix", width=80)
         self.product_list_table.column("qte", width=100)
-        self.product_list_table.column("status", width=100)
-        # self.product_list_table.bind("<ButtonRelease-1>", self.get_data)
+        self.product_list_table.column("status", width=50)
+        self.product_list_table.bind("<ButtonRelease-1>", self.get_data)
+
         note_label = Label(product_frame, text="Note: Entrez 0 pour enlever le produit du panier", font=("Lato", 12, "normal"), fg="#B22727", bg="white")
         note_label.pack(side=BOTTOM, fill=X)
 
@@ -96,20 +98,22 @@ class POS:
         cust_contact_txt.place(x=380, y=35, width=140)
 
         # cart frame ---------------------------------------
+        self.cart_list = []
+
         cal_cart_frame = Frame(self.root, bd=2, relief=RIDGE)
         cal_cart_frame.place(x=420, y=190, width=530, height=360)
 
         cart_frame = Frame(cal_cart_frame, bd=2, relief=RIDGE)
         cart_frame.place(x=2, y=3, relwidth=1, height=340)
-        cust_title = Label(cart_frame, text="Panier   | \tTotal des Produits: [ 0 ]", font=("Lato", 14, "normal"), bg="#2EB086", fg="white")
-        cust_title.pack(side=TOP, fill=X)
+        self.cart_title = Label(cart_frame, text="Panier   | \tTotal des Produits:  0 ", font=("Lato", 14, "normal"), bg="#2EB086", fg="white")
+        self.cart_title.pack(side=TOP, fill=X)
 
         scroll_y = Scrollbar(cart_frame, orient=VERTICAL)
         scroll_x = Scrollbar(cart_frame, orient=HORIZONTAL)
         scroll_x.pack(side=BOTTOM, fill=X)
         scroll_y.pack(side=RIGHT, fill=Y)
 
-        list_columns_cart = ("id", "nom", "prix", "qte", "status")
+        list_columns_cart = ("id", "nom", "prix", "qte")
         self.cart_list_table = ttk.Treeview(cart_frame, columns=list_columns_cart, yscrollcommand=scroll_y.set,
                                             xscrollcommand=scroll_x.set)
         self.cart_list_table.pack(fill=BOTH, expand=1)
@@ -120,14 +124,12 @@ class POS:
         self.cart_list_table.heading("nom", text="Nom")
         self.cart_list_table.heading("prix", text="Prix")
         self.cart_list_table.heading("qte", text="QTE")
-        self.cart_list_table.heading("status", text="Status")
         self.cart_list_table["show"] = "headings"
 
         self.cart_list_table.column("id", width=90)
         self.cart_list_table.column("nom", width=100)
         self.cart_list_table.column("prix", width=100)
         self.cart_list_table.column("qte", width=100)
-        self.cart_list_table.column("status", width=100)
 
         # self.cart_list_table.bind("<ButtonRelease-1>", self.get_data)
 
@@ -155,10 +157,10 @@ class POS:
         p_qty_text = Entry(cart_widgets_frame, textvariable=self.p_qty_var, font=("Lato", 13, "normal"), bg="#EEE6CE")
         p_qty_text.place(x=400, y=35, width=120, height=22)
 
-        p_stock_label = Label(cart_widgets_frame, text="En Stock [999]", font=("Lato", 13, "normal"), bg="white")
-        p_stock_label.place(x=5, y=70)
+        self.p_stock_label = Label(cart_widgets_frame, text="En Stock", font=("Lato", 13, "normal"), bg="white")
+        self.p_stock_label.place(x=5, y=70)
 
-        add_cart_btn = Button(cart_widgets_frame, text="Ajouter au Panier", font=("Lato", 12, "normal"), bg="#0AA1DD", fg="white")
+        add_cart_btn = Button(cart_widgets_frame, text="Ajouter au Panier", command=self.add_cart, font=("Lato", 12, "normal"), bg="#0AA1DD", fg="white")
         add_cart_btn.place(x=180, y=70, width=150, height=30)
         clear_cart_btn = Button(cart_widgets_frame, text="Vider Panier", font=("Lato", 12, "normal"), bg="#313552", fg="white")
         clear_cart_btn.place(x=340, y=70, width=150, height=30)
@@ -167,8 +169,130 @@ class POS:
         bill_frame = Frame(self.root, bd=2, relief=RIDGE, bg="white")
         bill_frame.place(x=953, y=110, width=390, height=410)
 
-        cust_title = Label(cart_frame, text="Panier   | \tTotal des Produits: [ 0 ]", font=("Lato", 14, "normal"), bg="#2EB086", fg="white")
-        cust_title.pack(side=TOP, fill=X)
+        bill_title = Label(bill_frame, text="Facture du Client", font=("Lato", 14, "normal"), bg="#2EB086", fg="white")
+        bill_title.pack(side=TOP, fill=X)
+        bill_scroll_y = Scrollbar(bill_frame, orient=VERTICAL)
+        bill_scroll_y.pack(side=RIGHT, fill=Y)
+        self.bill_area_text = Text(bill_frame, yscrollcommand=bill_scroll_y.set)
+        self.bill_area_text.pack(fill=BOTH, expand=1)
+        bill_scroll_y.config(command=self.bill_area_text.yview)
+
+        # billing buttons ----------------------------------------------------------
+        bill_menu_frame = Frame(self.root, bd=2, relief=RIDGE, bg="white")
+        bill_menu_frame.place(x=953, y=520, width=390, height=140)
+
+        self.amount_label = Label(bill_menu_frame, text="Montant\n0", font=("Lato", 14, "normal"), bg="#f27b53", fg="white")
+        self.amount_label.place(x=5, y=5, width=120, height=70)
+
+        self.discount_label = Label(bill_menu_frame, text="Réduction\n5%", font=("Lato", 14, "normal"), bg="#dc587d", fg="white")
+        self.discount_label.place(x=130, y=5, width=120, height=70)
+
+        self.net_label = Label(bill_menu_frame, text="Net à Payer\n0", font=("Lato", 14, "normal"), bg="#847cc5", fg="white")
+        self.net_label.place(x=255, y=5, width=125, height=70)
+
+        print_bnt = Button(bill_menu_frame, text="Imprimer", font=("Lato", 14, "normal"), bg="#2EB086", fg="white")
+        print_bnt.place(x=5, y=80, width=120, height=50)
+
+        generate_btn = Button(bill_menu_frame, text="Générer\nFacture", font=("Lato", 14, "normal"), bg="#0AA1DD", fg="white")
+        generate_btn.place(x=130, y=80, width=120, height=50)
+
+        clear_all_btn = Button(bill_menu_frame, text="Effacer\nTout", font=("Lato", 14, "normal"),bg="#313552", fg="white")
+        clear_all_btn.place(x=255, y=80, width=125, height=50)
+
+        self.show_product()
+
+    # methods ----------------------
+    def show_product(self):
+        con = sqlite3.connect("system.db")
+        cur = con.cursor()
+        try:
+            cur.execute("SELECT id, name, price, qty, status FROM product Where status='actif'")
+            rows = cur.fetchall()
+            self.product_list_table.delete(*self.product_list_table.get_children())
+            for row in rows:
+                self.product_list_table.insert('',END,values=row)
+        except Exception as ex:
+            messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
+
+    def search_product(self):
+        con = sqlite3.connect('system.db')
+        cur = con.cursor()
+        try:
+            if self.search_var.get() == "":
+                messagebox.showerror("Erreur", "Champ de recherche vide", parent=self.root)
+            else:
+                cur.execute("SELECT id, name, price, qty, status FROM product WHERE name LIKE '%" + self.search_var.get() + "%' and status='actif'")
+                rows = cur.fetchall()
+                if len(rows) != 0 :
+                    self.product_list_table.delete(*self.product_list_table.get_children())
+                    for row in rows:
+                        self.product_list_table.insert('', END, values=row)
+                else:
+                    messagebox.showerror("Erreur", "Aucun Produit trouvé!", parent=self.root)
+        except Exception as ex:
+            messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
+
+    def get_data(self, ev):
+        table_focus = self.product_list_table.focus()
+        table_content = (self.product_list_table.item(table_focus))
+        row = table_content["values"]
+
+        self.p_id_var.set(row[0])
+        self.p_name_var.set(row[1])
+        self.p_price_var.set(row[2])
+        # self.p_stock_var.set(row[])
+        self.p_stock_label.config(text=f"En Stock: {row[3]}")
+
+    def add_cart(self):
+        if self.p_id_var.get() == "":
+            messagebox.showerror("Erreur", "Veuillez Selectionner Un Produit", parent=self.root)
+        elif self.p_qty_var.get() == "":
+            messagebox.showerror("Erreur", "Veuillez Saisir Quantité", parent=self.root)
+        else:
+            calculated_price = float(int(self.p_qty_var.get()) * float(self.p_price_var.get()))
+            print(calculated_price)
+            cart_data = [self.p_id_var.get(), self.p_name_var.get(), calculated_price, self.p_qty_var.get()]
+
+            # to update cart
+            product_exists = False
+            index = 0
+            for row in self.cart_list:
+                if self.p_id_var.get() == row[0]:
+                    product_exists = True
+                    break
+                index += 1
+
+            if product_exists:
+                op = messagebox.askyesno("Confirmation", "Produit existe deja. Voulez vous mettre a jour ?")
+                if op:
+                    if self.p_qty_var.get() == "0":
+                        self.cart_list.pop(index)
+                    else:
+                        self.cart_list[index][2] = calculated_price
+                        self.cart_list[index][3] = self.p_qty_var.get()
+            else:
+                self.cart_list.append(cart_data)
+            self.show_cart()
+            self.bill_update()
+
+    def show_cart(self):
+        try:
+            self.cart_list_table.delete(*self.cart_list_table.get_children())
+            for row in self.cart_list:
+                self.cart_list_table.insert('',END,values=row)
+        except Exception as ex:
+            messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
+
+    def bill_update(self):
+        amount = 0
+        net_pay = 0
+        for row in self.cart_list:
+            amount = amount + float(row[2])
+        net_pay = amount - (amount * 5)/100
+
+        self.amount_label.config(text=f"Montant\n{amount}DH")
+        self.net_label.config(text=f"Net à Payer\n{net_pay}DH")
+        self.cart_title.config(text=f"Panier   | \tTotal des Produits:  {len(self.cart_list)} ")
 
 if __name__ == "__main__":
     root = Tk()
