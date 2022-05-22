@@ -53,7 +53,7 @@ class Sales:
         title_bill.pack(side=TOP, fill=X)
         scroll_bill_y = Scrollbar(bill_frame, orient=VERTICAL)
         scroll_bill_y.pack(side=RIGHT, fill=Y)
-        self.bill_area = Text(bill_frame, font=("Lato", 14, "normal"), bg="#EEE6CE")
+        self.bill_area = Text(bill_frame, font=("Lato", 12, "normal"), bg="#EEE6CE")
         self.bill_area.pack(fill=BOTH, expand=1)
         scroll_bill_y.config(command=self.bill_area.yview)
 
