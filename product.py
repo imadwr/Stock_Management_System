@@ -4,8 +4,7 @@ import sqlite3
 
 
 class Product:
-    def __init__(self, id, category, supplier, name, price, qty, status):
-        self.prod_id_var = id
+    def __init__(self, category, supplier, name, price, qty, status):
         self.categ_var = category
         self.supp_var = supplier
         self.name_var = name
@@ -13,11 +12,15 @@ class Product:
         self.qty_var = qty
         self.status_var = status
 
-cur.execute("CREATE TABLE IF NOT EXISTS product(id INTEGER PRIMARY KEY AUTOINCREMENT, category text, supplier text, name text, price text, qty text, status text)")
+    def get_product_data(self):
+        values_list = []
+        for (att, value) in self.__dict__.items():
+            values_list.append(value)
+        return tuple(values_list)
 
-class ProductManager(Product):
+
+class ProductManager:
     def __init__(self, root_win):
-        super(ProductManager, self).__init__()
         self.root = root_win
         self.root.geometry("1100x500+220+130")
         self.root.title("Gestion des Produits")
@@ -183,14 +186,15 @@ class ProductManager(Product):
                 if row is not None:
                     messagebox.showerror("Erreur", "Produit deja existant", parent=self.root)
                 else:
-                    values_to_insert = (self.categ_var.get(),
-                                        self.supp_var.get(),
-                                        self.name_var.get(),
-                                        self.price_var.get(),
-                                        self.qty_var.get(),
-                                        self.status_var.get(),
-                                        )
-                    cur.execute("INSERT INTO product (category, supplier, name, price, qty, status) VALUES (?,?,?,?,?,?)", values_to_insert)
+                    prod_to_insert = Product(self.categ_var.get(), self.supp_var.get(), self.name_var.get(), self.price_var.get(), self.qty_var.get(), self.status_var.get(),)
+                    # values_to_insert = (self.categ_var.get(),
+                    #                     self.supp_var.get(),
+                    #                     self.name_var.get(),
+                    #                     self.price_var.get(),
+                    #                     self.qty_var.get(),
+                    #                     self.status_var.get(),
+                    #                     )
+                    cur.execute("INSERT INTO product (category, supplier, name, price, qty, status) VALUES (?,?,?,?,?,?)", prod_to_insert.get_product_data())
                     con.commit()
                     messagebox.showinfo("Succès", "Produit ajouté avec succès", parent=self.root)
                     self.show_product()
