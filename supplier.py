@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 import sqlite3
 
 
-class Supplier:
+class SupplierManager:
     def __init__(self, root_win):
         self.root = root_win
         self.root.geometry("1100x500+220+130")
@@ -226,5 +226,5 @@ class Supplier:
 
 if __name__ == "__main__":
     root = Tk()
-    system = Supplier(root)
+    system = SupplierManager(root)
     root.mainloop()

@@ -4,7 +4,20 @@ import sqlite3
 
 
 class Product:
+    def __init__(self, id, category, supplier, name, price, qty, status):
+        self.prod_id_var = id
+        self.categ_var = category
+        self.supp_var = supplier
+        self.name_var = name
+        self.price_var = price
+        self.qty_var = qty
+        self.status_var = status
+
+cur.execute("CREATE TABLE IF NOT EXISTS product(id INTEGER PRIMARY KEY AUTOINCREMENT, category text, supplier text, name text, price text, qty text, status text)")
+
+class ProductManager(Product):
     def __init__(self, root_win):
+        super(ProductManager, self).__init__()
         self.root = root_win
         self.root.geometry("1100x500+220+130")
         self.root.title("Gestion des Produits")
@@ -302,5 +315,5 @@ class Product:
 
 if __name__ == "__main__":
     root = Tk()
-    system = Product(root)
+    system = ProductManager(root)
     root.mainloop()

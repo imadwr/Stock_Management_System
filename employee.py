@@ -2,14 +2,38 @@ from tkinter import *
 from tkinter import ttk, messagebox
 import sqlite3
 
-
 class Employee:
+    def __init__(self, u_id, name, contact, gender, dob, doj, email, password, u_type, address, salary):
+        self.emp_id_var = u_id
+        self.name_var = name
+        self.contact_var = contact
+        self.gender_var = gender
+        self.dob_var = dob
+        self.doj_var = doj
+        self.email_var = email
+        self.password_var = password
+        self.usertype_var = u_type
+        self.address_var = address
+        self.salary_var = salary
+
+    def get_employee_data(self):
+        values_list = []
+        for (att, value) in self.__dict__.items():
+            values_list.append(value)
+        return tuple(values_list)
+
+
+
+
+class EmployeeManager:
     def __init__(self, root_win):
+        super(EmployeeManager, self).__init__()
         self.root = root_win
         self.root.geometry("1100x500+220+130")
         self.root.title("Gestion des Employés")
         self.root.config(bg="white")
         self.root.focus_force()
+
         # system variables
         self.searchOption_var = StringVar()
         self.searchText_var = StringVar()
@@ -167,19 +191,22 @@ class Employee:
                 if row is not None:
                     messagebox.showerror("Erreur", "ID deja existant, saisir un autre", parent=self.root)
                 else:
-                    values_to_insert = (self.emp_id_var.get(),
-                                        self.name_var.get(),
-                                        self.email_var.get(),
-                                        self.gender_var.get(),
-                                        self.contact_var.get(),
-                                        self.dob_var.get(),
-                                        self.doj_var.get(),
-                                        self.password_var.get(),
-                                        self.usertype_var.get(),
-                                        self.address_txt.get('1.0', END),
-                                        self.salary_var.get()
-                                        )
-                    cur.execute("INSERT INTO employee (id, name, email, gender, contact, dob, doj, password, type, address, salary) VALUES (?,?,?,?,?,?,?,?,?,?,?)", values_to_insert)
+                    print("here")
+                    emp_to_insert = Employee(self.emp_id_var.get(),
+                                             self.name_var.get(),
+                                             self.email_var.get(),
+                                             self.gender_var.get(),
+                                             self.contact_var.get(),
+                                             self.dob_var.get(),
+                                             self.doj_var.get(),
+                                             self.password_var.get(),
+                                             self.usertype_var.get(),
+                                             self.address_txt.get('1.0', END),
+                                             self.salary_var.get()
+                                             )
+                    print(emp_to_insert.get_employee_data())
+
+                    cur.execute("INSERT INTO employee (id, name, email, gender, contact, dob, doj, password, type, address, salary) VALUES (?,?,?,?,?,?,?,?,?,?,?)", emp_to_insert.get_employee_data())
                     con.commit()
                     messagebox.showinfo("Succès", "Employé est ajouté avec succès", parent=self.root)
                     self.show_emp()
@@ -315,5 +342,5 @@ class Employee:
 
 if __name__ == "__main__":
     root = Tk()
-    system = Employee(root)
+    system = EmployeeManager(root)
     root.mainloop()

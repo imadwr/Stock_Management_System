@@ -1,10 +1,10 @@
 from tkinter import *
 from tkinter import ttk, messagebox
-from employee import Employee
-from supplier import Supplier
+from employee import EmployeeManager
+from supplier import SupplierManager
 from category import Category
-from product import Product
-from sales import Sales
+from product import ProductManager
+from sales import SalesManager
 import sqlite3
 import os
 import threading
@@ -121,11 +121,11 @@ class StockManager:
 
     def employee(self):
         self.new_window = Toplevel(self.root)
-        self.emp_manager = Employee(self.new_window)
+        self.emp_manager = EmployeeManager(self.new_window)
 
     def supplier(self):
         self.new_window = Toplevel(self.root)
-        self.supp_manager = Supplier(self.new_window)
+        self.supp_manager = SupplierManager(self.new_window)
 
     def category(self):
         self.new_window = Toplevel(self.root)
@@ -133,11 +133,11 @@ class StockManager:
 
     def product(self):
         self.new_window = Toplevel(self.root)
-        self.product_manager = Product(self.new_window)
+        self.product_manager = ProductManager(self.new_window)
 
     def sales(self):
         self.new_window = Toplevel(self.root)
-        self.sales_manager = Sales(self.new_window)
+        self.sales_manager = SalesManager(self.new_window)
 
     def update_content(self):
         con = sqlite3.connect("system.db")
@@ -159,7 +159,9 @@ class StockManager:
             cat = cur.fetchone()[0]
             self.category_label.config(text=f"Total des Catégories\n{cat}")
 
-            self.sales_label.config(text=f"Total des Ventes\n{str(len(os.listdir('bills')))}")
+            cur.execute("SELECT COUNT(*) FROM sales")
+            sale = cur.fetchone()[0]
+            self.sales_label.config(text=f"Total des Ventes\n{sale}")
 
             threading.Timer(2.0, self.update_content).start()
         except Exception as ex:

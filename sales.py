@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import sqlite3
 import os
 
-class Sales:
+class SalesManager:
     def __init__(self, root_win):
         self.root = root_win
         self.root.geometry("1100x500+220+130")
@@ -109,5 +109,5 @@ class Sales:
 
 if __name__ == "__main__":
     root = Tk()
-    system = Sales(root)
+    system = SalesManager(root)
     root.mainloop()
