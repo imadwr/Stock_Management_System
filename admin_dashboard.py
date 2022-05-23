@@ -1,5 +1,5 @@
 from tkinter import *
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 from employee import Employee
 from supplier import Supplier
 from category import Category
@@ -22,7 +22,7 @@ class StockManager:
         title.place(x=200, y=0, relwidth=1, height=70)
 
         # logout button
-        logout_btn = Button(self.root, text="déconnexion", font=("Lato", 11, "bold"), bd=0, bg="#F66B0E", fg="white")
+        logout_btn = Button(self.root, text="déconnexion", command=self.logout, font=("Lato", 11, "bold"), bd=0, bg="#F66B0E", fg="white")
         logout_btn.place(x=1180, y=10, height=40, width=120)
 
         # Menu
@@ -57,12 +57,66 @@ class StockManager:
         self.sales_label = Label(self.root, text="Total des Ventes\n0", font=("Lato", 15, "bold"), fg="white", bg="#23ba9b", bd=5)
         self.sales_label.place(x=650, y=200, width=300, height=100)
 
+        # sales list
+        sales_list_frame = Frame(self.root, bd=3, relief=RIDGE)
+        sales_list_frame.place(x=220, y=350, width=420, height=250)
+
+        scroll_y = Scrollbar(sales_list_frame, orient=VERTICAL)
+        scroll_x = Scrollbar(sales_list_frame, orient=HORIZONTAL)
+        scroll_x.pack(side=BOTTOM, fill=X)
+        scroll_y.pack(side=RIGHT, fill=Y)
+
+        sales_list_columns = ("facture_no", "nom_client", "contact_client", "date")
+        self.sales_list_table = ttk.Treeview(sales_list_frame, columns=sales_list_columns, yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        self.sales_list_table.pack(fill=BOTH, expand=1)
+        scroll_x.config(command=self.sales_list_table.xview)
+        scroll_y.config(command=self.sales_list_table.yview)
+
+        self.sales_list_table.heading("facture_no", text="Facture No.")
+        self.sales_list_table.heading("nom_client", text="Nom Client")
+        self.sales_list_table.heading("contact_client", text="Contact Client")
+        self.sales_list_table.heading("date", text="Date")
+        self.sales_list_table["show"] = "headings"
+
+        self.sales_list_table.column("facture_no", width=100)
+        self.sales_list_table.column("nom_client", width=100)
+        self.sales_list_table.column("contact_client", width=100)
+        self.sales_list_table.column("date", width=100)
+
+        # line_sale list
+        line_sale_list_columns = Frame(self.root, bd=3, relief=RIDGE)
+        line_sale_list_columns.place(x=660, y=350, width=650, height=250)
+
+        scroll_y = Scrollbar(line_sale_list_columns, orient=VERTICAL)
+        scroll_x = Scrollbar(line_sale_list_columns, orient=HORIZONTAL)
+        scroll_x.pack(side=BOTTOM, fill=X)
+        scroll_y.pack(side=RIGHT, fill=Y)
+
+        sales_list_columns = ("facture_no", "nom_prod", "prix", "qte")
+        self.line_sale_list_table = ttk.Treeview(line_sale_list_columns, columns=sales_list_columns, yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        self.line_sale_list_table.pack(fill=BOTH, expand=1)
+        scroll_x.config(command=self.line_sale_list_table.xview)
+        scroll_y.config(command=self.line_sale_list_table.yview)
+
+        self.line_sale_list_table.heading("facture_no", text="Facture No.")
+        self.line_sale_list_table.heading("nom_prod", text="Nom Produit")
+        self.line_sale_list_table.heading("prix", text="Prix")
+        self.line_sale_list_table.heading("qte", text="QTE")
+        self.line_sale_list_table["show"] = "headings"
+
+        self.line_sale_list_table.column("facture_no", width=100)
+        self.line_sale_list_table.column("nom_prod", width=100)
+        self.line_sale_list_table.column("prix", width=100)
+        self.line_sale_list_table.column("qte", width=100)
+
+
         # footer
         footer = Label(self.root, text="will write footer here later", font=("Lato", 15, "normal"), bg="#2EB086", fg="#313552") # may add anchor here to center left
         footer.place(x=0, y=670, relwidth=1, height=30)
 
         self.update_content()
-
+        self.show_sales()
+        self.show_line_sale()
         # ========================================================
 
     def employee(self):
@@ -89,7 +143,7 @@ class StockManager:
         con = sqlite3.connect("system.db")
         cur = con.cursor()
         try:
-            cur.execute("SELECT COUNT(*) FROM product")
+            cur.execute("SELECT COUNT(*) FROM employee")
             p = cur.fetchone()[0]
             self.employee_label.config(text=f"Total des Employés\n{p}")
 
@@ -107,7 +161,35 @@ class StockManager:
 
             self.sales_label.config(text=f"Total des Ventes\n{str(len(os.listdir('bills')))}")
 
-            threading.Timer(1.0, self.update_content).start()
+            threading.Timer(2.0, self.update_content).start()
+        except Exception as ex:
+            messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
+
+    def logout(self):
+        self.root.destroy()
+        os.system("python login.py")
+
+    def show_sales(self):
+        con = sqlite3.connect("system.db")
+        cur = con.cursor()
+        try:
+            cur.execute("SELECT * FROM sales")
+            rows = cur.fetchall()
+            self.sales_list_table.delete(*self.sales_list_table.get_children())
+            for row in rows:
+                self.sales_list_table.insert('',END,values=row)
+        except Exception as ex:
+            messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
+
+    def show_line_sale(self):
+        con = sqlite3.connect("system.db")
+        cur = con.cursor()
+        try:
+            cur.execute("SELECT ls.invoice, p.name, ls.price, ls.qty FROM line_sale ls JOIN product p ON ls.product_id=p.id")
+            rows = cur.fetchall()
+            self.line_sale_list_table.delete(*self.line_sale_list_table.get_children())
+            for row in rows:
+                self.line_sale_list_table.insert('',END,values=row)
         except Exception as ex:
             messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
 

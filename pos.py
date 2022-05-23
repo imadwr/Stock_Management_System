@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 import sqlite3
 import time
+import os
 
 class POS:
     def __init__(self, root_win):
@@ -15,7 +16,7 @@ class POS:
         title.place(x=10, y=0, relwidth=1, height=70)
 
         # logout button
-        logout_btn = Button(self.root, text="déconnexion", font=("Lato", 11, "bold"), bd=0, bg="#F66B0E", fg="white")
+        logout_btn = Button(self.root, text="déconnexion", command=self.logout, font=("Lato", 11, "bold"), bd=0, bg="#F66B0E", fg="white")
         logout_btn.place(x=1180, y=10, height=40, width=120)
 
         # product Frame ----------------------------------
@@ -346,6 +347,14 @@ Nom Produit\t\t\tQTE\tPrix
         self.bill_area_text.delete('1.0', END)
         self.bill_area_text.insert('1.0', bill_top_temp)
 
+        con = sqlite3.connect("system.db")
+        cur = con.cursor()
+        try:
+            cur.execute("INSERT INTO sales VALUES (?,?,?,?)", (self.invoice_n, self.cust_name_var.get(), self.cust_contact_var.get(),str(time.strftime("%d/%m/%Y"))))
+            con.commit()
+        except Exception as ex:
+            messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
+
     def bill_middle(self):
         con = sqlite3.connect("system.db")
         cur = con.cursor()
@@ -364,6 +373,7 @@ Nom Produit\t\t\tQTE\tPrix
                 else:
                     status = "actif"
                 cur.execute("UPDATE product set qty=?, status=? where id=?", (updated_qty, status, id))
+                cur.execute("INSERT INTO line_sale VALUES (?,?,?,?)", (self.invoice_n, id, price, qty))
             con.commit()
             self.show_product()
         except Exception as ex:
@@ -396,6 +406,11 @@ Net à Payer\t\t\t\tDH {self.net_pay}
         self.clear_cart()
         self.show_product()
         self.show_cart()
+
+    def logout(self):
+        self.root.destroy()
+        os.system("python login.py")
+
 
 if __name__ == "__main__":
     root = Tk()
