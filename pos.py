@@ -4,6 +4,34 @@ import sqlite3
 import time
 import os
 
+
+class Sales:
+    def __init__(self, inv, cust_n, cust_con, date):
+        self.invoice_s = inv
+        self.cust_name = cust_n
+        self.cust_contact = cust_con
+        self.date = date
+
+    def get_sales_data(self):
+        values_list = []
+        for (att, value) in self.__dict__.items():
+            values_list.append(value)
+        return tuple(values_list)
+
+
+class LineSale:
+    def __init__(self, inv, id_p, price, qty):
+        self.invoice_n = inv
+        self.id_prod = id_p
+        self.price = price
+        self.qty = qty
+
+    def get_line_sale_data(self):
+        values_list = []
+        for (att, value) in self.__dict__.items():
+            values_list.append(value)
+        return tuple(values_list)
+
 class POS:
     def __init__(self, root_win):
         self.root = root_win
@@ -350,7 +378,8 @@ Nom Produit\t\t\tQTE\tPrix
         con = sqlite3.connect("system.db")
         cur = con.cursor()
         try:
-            cur.execute("INSERT INTO sales VALUES (?,?,?,?)", (self.invoice_n, self.cust_name_var.get(), self.cust_contact_var.get(),str(time.strftime("%d/%m/%Y"))))
+            sale_to_insert = Sales(self.invoice_n, self.cust_name_var.get(), self.cust_contact_var.get(), str(time.strftime("%d/%m/%Y")))
+            cur.execute("INSERT INTO sales VALUES (?,?,?,?)", sale_to_insert.get_sales_data())
             con.commit()
         except Exception as ex:
             messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
@@ -373,7 +402,8 @@ Nom Produit\t\t\tQTE\tPrix
                 else:
                     status = "actif"
                 cur.execute("UPDATE product set qty=?, status=? where id=?", (updated_qty, status, id))
-                cur.execute("INSERT INTO line_sale VALUES (?,?,?,?)", (self.invoice_n, id, price, qty))
+                line_sale_to_insert = LineSale(self.invoice_n, id, price, qty)
+                cur.execute("INSERT INTO line_sale VALUES (?,?,?,?)", line_sale_to_insert.get_line_sale_data())
             con.commit()
             self.show_product()
         except Exception as ex:

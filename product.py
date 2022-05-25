@@ -36,6 +36,8 @@ class ProductManager:
         self.supp_var = StringVar()
         self.categ_list = []
         self.supp_list = []
+        self.categ_list_selection = ["Select"]
+        self.supp_list_selection = ["Select"]
         self.get_categ_supp()
 
         self.name_var = StringVar()
@@ -66,11 +68,11 @@ class ProductManager:
         # inputs
 
         # category select
-        categ_select = ttk.Combobox(self.root, textvariable=self.categ_var, values=self.categ_list, state="readonly", justify=CENTER, font=("Lato", 14, "normal"))
+        categ_select = ttk.Combobox(self.root, textvariable=self.categ_var, values=self.categ_list_selection, state="readonly", justify=CENTER, font=("Lato", 14, "normal"))
         categ_select.place(x=190, y=70, width=200)
         categ_select.current(0)
         # supplier select
-        supp_select = ttk.Combobox(self.root, textvariable=self.supp_var, values=self.supp_list, state="readonly", justify=CENTER, font=("Lato", 14, "normal"))
+        supp_select = ttk.Combobox(self.root, textvariable=self.supp_var, values=self.supp_list_selection, state="readonly", justify=CENTER, font=("Lato", 14, "normal"))
         supp_select.place(x=190, y=120, width=200)
         supp_select.current(0)
 
@@ -152,23 +154,31 @@ class ProductManager:
         con = sqlite3.connect("system.db")
         cur = con.cursor()
         try:
-            cur.execute("SELECT name FROM category")
+            cur.execute("SELECT id, name FROM category")
             categs = cur.fetchall()
 
             if len(categs) > 0:
                 del self.categ_list[:]
-                self.categ_list.append("Select")
+                del self.categ_list_selection[:]
                 for item in categs:
-                    self.categ_list.append(item[0])
+                    self.categ_list.append(item)
 
-            cur.execute("SELECT name FROM supplier")
+                self.categ_list_selection.append("Select")
+                for item in self.categ_list:
+                    self.categ_list_selection.append(item[1])
+
+            cur.execute("SELECT invoice, name FROM supplier")
             suppls = cur.fetchall()
 
             if len(suppls) > 0:
                 del self.supp_list[:]
-                self.supp_list.append("Select")
+                del self.supp_list_selection[:]
                 for item in suppls:
-                    self.supp_list.append(item[0])
+                    self.supp_list.append(item)
+
+                self.supp_list_selection.append("Select")
+                for item in self.supp_list:
+                    self.supp_list_selection.append(item[1])
         except Exception as ex:
             messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
 
@@ -186,7 +196,16 @@ class ProductManager:
                 if row is not None:
                     messagebox.showerror("Erreur", "Produit deja existant", parent=self.root)
                 else:
-                    prod_to_insert = Product(self.categ_var.get(), self.supp_var.get(), self.name_var.get(), self.price_var.get(), self.qty_var.get(), self.status_var.get(),)
+                    categ_id = -1
+                    supp_id = -1
+                    for i in self.categ_list:
+                        if self.categ_var.get() == i[1]:
+                            categ_id = i[0]
+                    for i in self.supp_list:
+                        if self.supp_var.get() == i[1]:
+                            supp_id = i[0]
+
+                    prod_to_insert = Product(categ_id, supp_id, self.name_var.get(), self.price_var.get(), self.qty_var.get(), self.status_var.get(),)
                     # values_to_insert = (self.categ_var.get(),
                     #                     self.supp_var.get(),
                     #                     self.name_var.get(),
@@ -194,7 +213,7 @@ class ProductManager:
                     #                     self.qty_var.get(),
                     #                     self.status_var.get(),
                     #                     )
-                    cur.execute("INSERT INTO product (category, supplier, name, price, qty, status) VALUES (?,?,?,?,?,?)", prod_to_insert.get_product_data())
+                    cur.execute("INSERT INTO product (categ_id, supp_id, name, price, qty, status) VALUES (?,?,?,?,?,?)", prod_to_insert.get_product_data())
                     con.commit()
                     messagebox.showinfo("Succès", "Produit ajouté avec succès", parent=self.root)
                     self.show_product()
@@ -213,16 +232,24 @@ class ProductManager:
                 if row is None:
                     messagebox.showerror("Erreur", "ID de Produit Invalid", parent=self.root)
                 else:
+                    categ_id = -1
+                    supp_id = -1
+                    for i in self.categ_list:
+                        if self.categ_var.get() == i[1]:
+                            categ_id = i[0]
+                    for i in self.supp_list:
+                        if self.supp_var.get() == i[1]:
+                            supp_id = i[0]
                     values_to_insert = (
-                                        self.categ_var.get(),
-                                        self.supp_var.get(),
+                                        categ_id,
+                                        supp_id,
                                         self.name_var.get(),
                                         self.price_var.get(),
                                         self.qty_var.get(),
                                         self.status_var.get(),
                                         self.prod_id_var.get()
                                         )
-                    cur.execute("UPDATE product set category=?, supplier=?, name=?, price=?, qty=?, status=? WHERE id=?", values_to_insert)
+                    cur.execute("UPDATE product set categ_id=?, supp_id=?, name=?, price=?, qty=?, status=? WHERE id=?", values_to_insert)
                     con.commit()
                     messagebox.showinfo("Succès", "Produit modifié avec succès", parent=self.root)
                     self.show_product()
@@ -257,7 +284,7 @@ class ProductManager:
         con = sqlite3.connect("system.db")
         cur = con.cursor()
         try:
-            cur.execute("SELECT * FROM product")
+            cur.execute("SELECT p.id, c.name, s.name, p.name, price, qty, status FROM product p JOIN category c ON c.id = p.categ_id JOIN supplier s ON s.invoice = p.supp_id")
             rows = cur.fetchall()
             self.product_list_table.delete(*self.product_list_table.get_children())
             for row in rows:
@@ -290,7 +317,6 @@ class ProductManager:
                     messagebox.showerror("Erreur", "Aucun Produit trouvé!", parent=self.root)
         except Exception as ex:
             messagebox.showerror("Erreur", f"Erreur: {str(ex)}", parent=self.root)
-
 
     def get_data(self, ev):
         table_focus = self.product_list_table.focus()

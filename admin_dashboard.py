@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from employee import EmployeeManager
 from supplier import SupplierManager
-from category import Category
+from category import CategoryManager
 from product import ProductManager
 from sales import SalesManager
 import sqlite3
@@ -32,18 +32,16 @@ class StockManager:
         menu_label = Label(menu_frame, text="Menu", font=("Lato", 15, "bold"), fg="#313552", bg="#23ba9b")
         menu_label.pack(side=TOP, fill=X)
 
-        employee_btn = Button(menu_frame, text="Employés", command=self.employee, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
+        employee_btn = Button(menu_frame, text="Employés", command=self.show_employee_interface, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
         employee_btn.pack(side=TOP, fill=X)
-        supplier_btn = Button(menu_frame, text="Fournisseurs", command=self.supplier, bg="#23282c", font=("Lato", 14, "normal"), fg="#a7acb2", bd=0, cursor="hand2")
+        supplier_btn = Button(menu_frame, text="Fournisseurs", command=self.show_supplier_interface, bg="#23282c", font=("Lato", 14, "normal"), fg="#a7acb2", bd=0, cursor="hand2")
         supplier_btn.pack(side=TOP, fill=X)
-        product_btn = Button(menu_frame, text="Produits", command=self.product, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
+        product_btn = Button(menu_frame, text="Produits", command=self.show_product_interface, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
         product_btn.pack(side=TOP, fill=X)
-        category_btn = Button(menu_frame, text="Catégories", command=self.category, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
+        category_btn = Button(menu_frame, text="Catégories", command=self.show_category_interface, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
         category_btn.pack(side=TOP, fill=X)
-        sales_btn = Button(menu_frame, text="Ventes", command=self.sales, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
+        sales_btn = Button(menu_frame, text="Ventes", command=self.show_sales_interface, font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
         sales_btn.pack(side=TOP, fill=X)
-        quit_btn = Button(menu_frame, text="Quitter", font=("Lato", 14, "normal"), bg="#23282c", fg="#a7acb2", bd=0, cursor="hand2")
-        quit_btn.pack(side=TOP, fill=X)
 
         # dashboard content
         self.employee_label = Label(self.root, text="Total des Employés\n0", font=("Lato", 15, "bold"), fg="white", bg="#f27b53", bd=5)
@@ -119,23 +117,23 @@ class StockManager:
         self.show_line_sale()
         # ========================================================
 
-    def employee(self):
+    def show_employee_interface(self):
         self.new_window = Toplevel(self.root)
         self.emp_manager = EmployeeManager(self.new_window)
 
-    def supplier(self):
+    def show_supplier_interface(self):
         self.new_window = Toplevel(self.root)
         self.supp_manager = SupplierManager(self.new_window)
 
-    def category(self):
+    def show_category_interface(self):
         self.new_window = Toplevel(self.root)
-        self.category_manager = Category(self.new_window)
+        self.category_manager = CategoryManager(self.new_window)
 
-    def product(self):
+    def show_product_interface(self):
         self.new_window = Toplevel(self.root)
         self.product_manager = ProductManager(self.new_window)
 
-    def sales(self):
+    def show_sales_interface(self):
         self.new_window = Toplevel(self.root)
         self.sales_manager = SalesManager(self.new_window)
 

@@ -4,7 +4,6 @@ import sqlite3
 import os
 
 
-
 class LoginManager:
     def __init__(self, root_win):
         self.root = root_win
@@ -74,6 +73,15 @@ class LoginManager:
 
 
 if __name__ == "__main__":
+    con = sqlite3.connect(r'system.db')
+    cur = con.cursor()
+    try:
+        cur.execute("SELECT * FROM employee")
+        rows = cur.fetchall()
+        if len(rows) == 0 :
+            os.system("python employee.py")
+    except Exception as ex:
+        messagebox.showerror("Erreur", f"Erreur: {str(ex)}")
     root = Tk()
     system = LoginManager(root)
     root.mainloop()

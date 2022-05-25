@@ -5,6 +5,17 @@ from PIL import Image, ImageTk
 
 
 class Category:
+    def __init__(self, name):
+        self.categ_name = name
+
+    def get_category_data(self):
+        values_list = []
+        for (att, value) in self.__dict__.items():
+            values_list.append(value)
+        return tuple(values_list)
+
+
+class CategoryManager:
     def __init__(self, root_win):
         self.root = root_win
         self.root.geometry("1100x500+220+130")
@@ -79,10 +90,11 @@ class Category:
                 if row is not None:
                     messagebox.showerror("Erreur", "Catégorie deja existante, saisir un autre", parent=self.root)
                 else:
-                    values_to_insert = (
-                                        self.categ_name_var.get(),
-                                        )
-                    cur.execute("INSERT INTO category (name) VALUES (?)", values_to_insert)
+                    categ_to_insert = Category(self.categ_name_var.get())
+                    # values_to_insert = (
+                    #                     self.categ_name_var.get(),
+                    #                     )
+                    cur.execute("INSERT INTO category (name) VALUES (?)", categ_to_insert.get_category_data())
                     con.commit()
                     messagebox.showinfo("Succès", "Catégorie est ajouté avec succès", parent=self.root)
                     self.show_categ()
@@ -138,5 +150,5 @@ class Category:
 
 if __name__ == "__main__":
     root = Tk()
-    system = Category(root)
+    system = CategoryManager(root)
     root.mainloop()

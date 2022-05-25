@@ -3,11 +3,25 @@ from tkinter import ttk, messagebox
 import sqlite3
 
 
+class Supplier:
+    def __init__(self, n_invoice, name, contact, desc):
+        self.invoice = n_invoice
+        self.name = name
+        self.contact = contact
+        self.description = desc
+
+    def get_supplier_data(self):
+        values_list = []
+        for (att, value) in self.__dict__.items():
+            values_list.append(value)
+        return tuple(values_list)
+
+
 class SupplierManager:
     def __init__(self, root_win):
         self.root = root_win
         self.root.geometry("1100x500+220+130")
-        self.root.title("Gestion des Employés")
+        self.root.title("Gestion des Fournisseurs")
         self.root.config(bg="white")
         self.root.focus_force()
         # system variables
@@ -113,12 +127,17 @@ class SupplierManager:
                 if row is not None:
                     messagebox.showerror("Erreur", "Facture no. deja existant, saisir un autre", parent=self.root)
                 else:
-                    values_to_insert = (self.supp_invoice_var.get(),
-                                        self.name_var.get(),
-                                        self.contact_var.get(),
-                                        self.desc_txt.get('1.0', END),
-                                        )
-                    cur.execute("INSERT INTO supplier (invoice, name, contact, desc) VALUES (?,?,?,?)", values_to_insert)
+                    supp_to_insert = Supplier(self.supp_invoice_var.get(),
+                                            self.name_var.get(),
+                                            self.contact_var.get(),
+                                            self.desc_txt.get('1.0', END)
+                                            )
+                    # values_to_insert = (self.supp_invoice_var.get(),
+                    #                     self.name_var.get(),
+                    #                     self.contact_var.get(),
+                    #                     self.desc_txt.get('1.0', END),
+                    #                     )
+                    cur.execute("INSERT INTO supplier (invoice, name, contact, desc) VALUES (?,?,?,?)", supp_to_insert.get_supplier_data())
                     con.commit()
                     messagebox.showinfo("Succès", "Fournisseur est ajouté avec succès", parent=self.root)
                     self.show_supp()
